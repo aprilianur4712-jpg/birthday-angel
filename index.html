@@ -1,0 +1,656 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Little Birthday Adventure for Angel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Patrick+Hand&display=swap');
+
+:root {
+  --yellow: #fffc8c;
+  --pink: #ff85bb;
+  --white: #fffdf7;
+  --plum: #76516f;
+  --dark: #563b58;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--yellow);
+  color: var(--dark);
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+}
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px dashed var(--plum); outline-offset: 5px; }
+#game {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px 50px;
+  background-image: radial-gradient(#ff85bb66 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+.page {
+  display: none;
+  width: min(720px, 100%);
+  min-height: 570px;
+  position: relative;
+  padding: 38px 24px 70px;
+  text-align: center;
+  background: var(--white);
+  border: 5px solid var(--plum);
+  box-shadow: 8px 8px 0 var(--pink), 14px 14px 0 #76516f44;
+  animation: enter .35s steps(5, end);
+}
+.page.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+@keyframes enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+h1,h2,p { line-height: 1.8; }
+h1 { font-size: clamp(18px, 4vw, 29px); }
+h2 { font-size: clamp(12px, 2.8vw, 17px); }
+p { font-size: 10px; line-height: 2.2; }
+.subtitle { font-size: 9px; }
+.pixel-btn {
+  border: 3px solid var(--dark);
+  background: var(--pink);
+  color: var(--dark);
+  padding: 15px 16px;
+  box-shadow: 4px 4px 0 var(--dark);
+  font-size: 9px;
+  margin: 10px 5px;
+  transition: transform .1s, box-shadow .1s;
+}
+.pixel-btn:hover { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--dark); }
+.pixel-btn:active { transform: translate(4px,4px); box-shadow: none; }
+.pixel-btn.yellow { background: var(--yellow); }
+.pixel-btn:disabled { opacity: .5; cursor: default; }
+.watermark {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 17px;
+  letter-spacing: .5px;
+  color: var(--plum);
+  transform: rotate(-5deg);
+  opacity: .9;
+}
+.pixel-art { font-size: 54px; margin: 10px; }
+.sparkle { animation: bob 1.5s steps(3,end) infinite alternate; }
+@keyframes bob { to { transform: translateY(-8px); } }
+
+/* Page 2: cake and candles */
+.cake { margin: 25px auto; width: 200px; }
+.cake-top {
+  height: 38px; background: #fff0d6;
+  border: 4px solid var(--dark); position: relative;
+}
+.cake-top:before {
+  content: ""; position: absolute; top: 4px; left: 8px;
+  width: 14px; height: 12px; background: var(--pink);
+  box-shadow: 28px 7px var(--pink), 60px 0 var(--pink),
+  100px 8px var(--pink), 140px 0 var(--pink);
+}
+.cake-body {
+  height: 64px; background: var(--pink);
+  border: 4px solid var(--dark); border-top: 0;
+  position: relative;
+}
+.cake-body:after {
+  content: ""; position: absolute; left: 10px; right: 10px; top: 18px;
+  height: 8px; background: #ffb8d6;
+  box-shadow: 0 17px #ffb8d6;
+}
+.cake-plate {
+  height: 10px; background: var(--yellow);
+  border: 3px solid var(--dark); margin: 0 -15px;
+}
+.candles { display: flex; justify-content: center; gap: 29px; height: 66px; }
+.candle {
+  width: 16px; height: 47px; background: var(--yellow);
+  border: 3px solid var(--dark); position: relative; transition: opacity .2s;
+}
+.candle:before {
+  content: ""; position: absolute; width: 7px; height: 12px;
+  background: #ff9c37; border: 2px solid var(--dark);
+  top: -18px; left: 1px; animation: flame .45s steps(2,end) infinite alternate;
+}
+.candle.out:before { display: none; }
+.candle.out { opacity: .5; background: #e6d5e1; }
+@keyframes flame { to { transform: scale(.8) translateY(2px); } }
+#wishMessage { min-height: 35px; color: #bd4d84; }
+
+/* Page 3: balloons */
+.balloon-field {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; width: 100%; max-width: 460px; margin: 22px auto;
+}
+.balloon {
+  border: 0; background: transparent; position: relative;
+  font-size: clamp(40px, 9vw, 60px);
+  filter: drop-shadow(3px 3px 0 #76516f33);
+  transition: transform .15s;
+}
+.balloon:hover { transform: scale(1.12) rotate(-6deg); }
+.balloon.popped { visibility: hidden; pointer-events: none; }
+.balloon span {
+  display: block; font: 8px 'Press Start 2P', monospace;
+  margin-top: 5px; color: var(--plum);
+}
+#paper {
+  display: none; background: #fff8c9;
+  border: 3px dashed #d6a848; padding: 20px;
+  margin: 10px auto; width: 100%; max-width: 470px;
+  animation: enter .3s steps(4,end);
+}
+#paper p {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 23px; line-height: 1.5; margin: 8px 0;
+}
+#balloonHint { min-height: 24px; }
+
+/* Page 4: letter */
+.letter {
+  background: #fff8d9; border: 3px dashed var(--pink);
+  text-align: left; padding: 22px;
+  width: 100%; max-height: 340px; overflow-y: auto;
+  font-family: 'Patrick Hand', cursive; font-size: 20px;
+  line-height: 1.55; white-space: pre-wrap;
+}
+.letter p { font: inherit; line-height: inherit; }
+
+/* Page 5 */
+.final-card {
+  border: 3px dashed var(--pink);
+  padding: 22px 10px; width: 100%;
+}
+.final-card p { line-height: 2.5; }
+@media (max-width: 480px) {
+  .page { padding: 28px 15px 65px; min-height: 550px; }
+  .letter { font-size: 18px; padding: 16px; }
+  .balloon-field { gap: 5px; }
+  .pixel-btn { font-size: 8px; }
+}
+
+/* === PIXEL GAME UPGRADE === */
+
+.balloon-field {
+  gap: 24px 18px;
+  padding: 12px 4px;
+}
+
+.balloon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  animation: balloonFloat 1.8s steps(4, end) infinite alternate;
+}
+
+.balloon:nth-child(even) {
+  animation-delay: -.8s;
+}
+
+.balloon .balloon-shape {
+  display: block;
+  width: 44px;
+  height: 52px;
+  position: relative;
+  background: var(--pink);
+  clip-path: polygon(
+    25% 0, 75% 0, 75% 8%, 91% 8%,
+    91% 25%, 100% 25%, 100% 65%,
+    91% 65%, 91% 78%, 75% 78%,
+    58% 88%, 58% 96%, 72% 96%,
+    72% 100%, 28% 100%, 28% 96%,
+    42% 96%, 42% 88%, 25% 78%,
+    9% 78%, 9% 65%, 0 65%,
+    0 25%, 9% 25%, 9% 8%, 25% 8%
+  );
+  filter: drop-shadow(4px 4px 0 #76516f55);
+}
+
+.balloon:nth-child(2) .balloon-shape,
+.balloon:nth-child(4) .balloon-shape {
+  background: var(--yellow);
+}
+
+.balloon:nth-child(3) .balloon-shape {
+  background: #ffb5d6;
+}
+
+.balloon .balloon-shape::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 7px;
+  height: 13px;
+  background: #fffdf7;
+  opacity: .85;
+}
+
+.balloon .string {
+  width: 3px;
+  height: 18px;
+  background: var(--plum);
+  display: block;
+  margin-top: -1px;
+}
+
+.balloon span {
+  margin-top: 7px;
+}
+
+
+.balloon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  position: relative;
+  animation: balloonFloat 2.4s ease-in-out infinite alternate;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.balloon:nth-child(2) { animation-delay: -.8s; }
+.balloon:nth-child(3) { animation-delay: -1.5s; }
+.balloon:nth-child(4) { animation-delay: -.4s; }
+.balloon:nth-child(5) { animation-delay: -1.2s; }
+
+@keyframes balloonFloat {
+  0% {
+    transform: translateY(8px) rotate(-3deg);
+  }
+  100% {
+    transform: translateY(-18px) rotate(3deg);
+  }
+}
+
+.balloon:hover {
+  filter: brightness(1.05);
+}
+
+.balloon.popped {
+  animation: popAway .2s steps(4, end) forwards;
+  pointer-events: none;
+}
+
+@keyframes popAway {
+  0% { transform: scale(1); opacity: 1; }
+  40% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+
+@keyframes popAway {
+  0% { transform: scale(1); opacity: 1; }
+  60% { transform: scale(1.35); opacity: .7; }
+  100% { transform: scale(.1); opacity: 0; }
+}
+
+#popEffects {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 99;
+}
+
+.pixel-confetti {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  animation: confettiFall .7s steps(5, end) forwards;
+}
+
+@keyframes confettiFall {
+  from { transform: translateY(0) rotate(0deg); opacity: 1; }
+  to { transform: translateY(120px) rotate(180deg); opacity: 0; }
+}
+
+.page.active .watermark {
+  text-shadow: 1px 1px 0 #fffdf7;
+}
+
+.balloon-field {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0px, 2vw, 18px);
+  width: 100%;
+  max-width: 520px;
+  margin: 30px auto;
+  min-height: 310px;
+}
+
+.balloon {
+  flex: 1;
+  min-width: 0;
+  align-self: center;
+}
+
+.balloon:nth-child(2),
+.balloon:nth-child(4) {
+  transform: translateY(48px);
+}
+
+.balloon:nth-child(3) {
+  transform: translateY(-12px);
+}
+
+.balloon:nth-child(2),
+.balloon:nth-child(4) {
+  animation: balloonFloat 2.8s ease-in-out infinite alternate;
+}
+
+.balloon:nth-child(3) {
+  animation: balloonFloat 2.5s ease-in-out infinite alternate;
+}
+
+.balloon .balloon-shape {
+  width: clamp(32px, 8vw, 55px);
+  height: clamp(42px, 10vw, 68px);
+}
+
+.balloon span {
+  display: none;
+}
+
+@media (max-width: 420px) {
+  .balloon-field { gap: 0; }
+  .balloon:nth-child(2),
+  .balloon:nth-child(4) { transform: translateY(30px); }
+}
+
+#paper {
+  background: #fff8d9;
+  border: 4px dashed #ff85bb;
+  box-shadow: 5px 5px 0 #76516f33;
+  padding: 20px;
+  margin: 14px auto;
+  width: 100%;
+  max-width: 470px;
+  animation: enter .3s steps(4, end);
+}
+
+#paper p {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 23px;
+  line-height: 1.5;
+  color: #76516f;
+}
+
+#paper .paper-hint {
+  font-size: 16px;
+  color: #c45c91;
+  margin-bottom: 0;
+}
+
+#paper[style*="display: block"] {
+  display: block;
+}
+
+/* MAKE ALL TEXT PIXEL */
+* {
+  font-family: 'Press Start 2P', monospace !important;
+}
+
+/* Keep long texts readable */
+.letter {
+  font-size: 9px !important;
+  line-height: 2.4 !important;
+}
+
+.letter p {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+#paper p {
+  font-size: 9px !important;
+  line-height: 2.4 !important;
+}
+
+.watermark {
+  font-size: 9px !important;
+  letter-spacing: 0 !important;
+}
+
+@media (max-width: 480px) {
+  .letter {
+    font-size: 8px !important;
+  }
+
+  #paper p {
+    font-size: 8px !important;
+  }
+}
+
+</style>
+</head>
+<body>
+<main id="game">
+
+  <!-- PAGE 1 -->
+  <section class="page active" id="page1">
+    <div class="pixel-art sparkle">🎂</div>
+    <p>★ A SPECIAL DAY HAS ARRIVED ★</p>
+    <h1>HAPPY BIRTHDAY,<br>ANGEL!</h1>
+    <p class="subtitle">a tiny pixel world made just for you ♡</p>
+    <div class="pixel-art">🌷 ⭐ 🎀</div>
+    <button class="pixel-btn" onclick="goTo(2)">START YOUR DAY →</button>
+    <span class="watermark">from nara</span>
+  </section>
+
+  <!-- PAGE 2 -->
+  <section class="page" id="page2">
+    <p>LEVEL 01 — MAKE A WISH</p>
+    <h2>MAKE 3 WISHES!</h2>
+    <p>three little wishes, just for you.</p>
+    <div class="cake">
+      <div class="candles">
+        <div class="candle"></div>
+        <div class="candle"></div>
+        <div class="candle"></div>
+      </div>
+      <div class="cake-top"></div>
+      <div class="cake-body"></div>
+      <div class="cake-plate"></div>
+    </div>
+    <p id="wishMessage" aria-live="polite">close your eyes & make a wish ♡</p>
+    <button class="pixel-btn" id="blowButton" onclick="blowCandle()">BLOW! 💨</button>
+    <button class="pixel-btn yellow" id="toBalloons" hidden onclick="goTo(3)">NEXT LEVEL →</button>
+    <span class="watermark">from nara</span>
+  </section>
+
+  <!-- PAGE 3 -->
+  <section class="page" id="page3">
+    <p>LEVEL 02 — A LITTLE SURPRISE</p>
+    <h2>POP THE BALLOONS!</h2>
+    <p>choose a balloon to reveal a little wish ♡</p>
+    <div class="balloon-field" id="balloonField">
+      
+
+<div class="balloon-field" id="balloonField">
+  <button class="balloon" onclick="popBalloon(0)" aria-label="Pop balloon">
+    <i class="balloon-shape"></i><i class="string"></i>
+  </button>
+  <button class="balloon" onclick="popBalloon(1)" aria-label="Pop balloon">
+    <i class="balloon-shape"></i><i class="string"></i>
+  </button>
+  <button class="balloon" onclick="popBalloon(2)" aria-label="Pop balloon">
+    <i class="balloon-shape"></i><i class="string"></i>
+  </button>
+  <button class="balloon" onclick="popBalloon(3)" aria-label="Pop balloon">
+    <i class="balloon-shape"></i><i class="string"></i>
+  </button>
+  <button class="balloon" onclick="popBalloon(4)" aria-label="Pop balloon">
+    <i class="balloon-shape"></i><i class="string"></i>
+  </button>
+</div>
+    </div>
+    <p id="balloonHint" aria-live="polite">POPPED: 0 / 5</p>
+<article id="paper" aria-live="polite">
+  <p id="paperText"></p>
+  <p class="paper-hint">♡ click another balloon for another wish ♡</p>
+</article>
+
+    <button class="pixel-btn" id="toLetter" hidden onclick="goTo(4)">READ MY LETTER →</button>
+    <span class="watermark">from nara</span>
+  </section>
+
+  <!-- PAGE 4 -->
+  <section class="page" id="page4">
+    <p>LEVEL 03 — FROM MY HEART</p>
+    <h2>A LETTER FOR YOU ♡</h2>
+    <div class="letter">happy birthday!! 🤍
+
+it’s kinda funny that we’ve only known each other for a couple of months, but i’m really happy that i got to meet you. sometimes you meet someone and somehow, even in a short amount of time, they become a really lovely part of your days. i think you’re one of those people.
+
+i hope this birthday brings you a little reminder of how much there is to look forward to. there are still so many places you haven’t seen, foods you haven’t tried, memories you haven’t made, and little moments that haven’t happened yet. i hope you get to experience all of them in your own time.
+
+i hope you keep being the person who can find sweetness in small things, laugh at the most random moments, and make ordinary days feel a little less ordinary. and whenever life gets messy, i hope you remember that there will always be better days waiting somewhere ahead.
+
+i’m really glad our paths happened to cross, and i hope we get to make a lot more random memories together. here’s to another year of you, and hopefully a really beautiful one. happy birthday, pretty girl</div>
+    <button class="pixel-btn" onclick="goTo(5)">ONE LAST THING →</button>
+    <span class="watermark">from nara</span>
+  </section>
+
+  <!-- PAGE 5 -->
+  <section class="page" id="page5">
+    <div class="pixel-art sparkle">💗</div>
+    <p>QUEST COMPLETE!</p>
+    <div class="final-card">
+      <h2>THE WORLD IS BETTER<br>WITH YOU IN IT.</h2>
+      <p>thank you for being you, angel.</p>
+      <div class="pixel-art">🌷 ⭐ 🎂 ⭐ 🌷</div>
+      <p>may this new chapter be<br>full of little happy things ♡</p>
+    </div>
+    <button class="pixel-btn" onclick="restart()">↻ PLAY AGAIN</button>
+    <span class="watermark">from nara</span>
+  </section>
+
+</main>
+
+<div id="popEffects" aria-hidden="true"></div>
+
+<script>
+let currentPage = 1;
+let candlesBlown = 0;
+let balloonsPopped = [];
+let openPaperIndex = null;
+
+const wishes = [
+  "i hope you always have good food and a happy heart.",
+  "i hope you laugh until your cheeks hurt.",
+  "i hope every day feels a little more made for you.",
+  "i hope you always find something beautiful in the ordinary.",
+  "i hope you’re always surrounded by people who love you dearly."
+];
+
+function goTo(number) {
+  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+  document.getElementById('page' + number).classList.add('active');
+  currentPage = number;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function blowCandle() {
+  if (candlesBlown >= 3) return;
+
+  const candles = document.querySelectorAll('.candle');
+  candles[candlesBlown].classList.add('out');
+  candlesBlown++;
+
+  document.getElementById('wishMessage').textContent = 'may your wish come true ♡';
+
+  if (candlesBlown === 3) {
+    document.getElementById('blowButton').hidden = true;
+    document.getElementById('toBalloons').hidden = false;
+    document.getElementById('wishMessage').textContent =
+      'all 3 wishes sent to the universe! ✨';
+  }
+}
+
+
+function popBalloon(index) {
+  if (balloonsPopped.includes(index)) return;
+
+  balloonsPopped.push(index);
+
+  const balloons = document.querySelectorAll('.balloon');
+  balloons[index].classList.add('popped');
+
+  // Pixel confetti burst
+  const effects = document.getElementById('popEffects');
+  const rect = balloons[index].getBoundingClientRect();
+
+  for (let i = 0; i < 12; i++) {
+    const pixel = document.createElement('span');
+    pixel.className = 'pixel-confetti';
+    pixel.style.left =
+      (rect.left + rect.width / 2 + Math.random() * 70 - 35) + 'px';
+    pixel.style.top =
+      (rect.top + 25 + Math.random() * 30 - 15) + 'px';
+    pixel.style.background =
+      ['#ff85bb', '#fffc8c', '#fffdf7', '#76516f'][i % 4];
+
+    effects.appendChild(pixel);
+    setTimeout(() => pixel.remove(), 750);
+  }
+
+  // Tampilkan surat sesuai balon yang dipilih
+  const paper = document.getElementById('paper');
+  const paperText = document.getElementById('paperText');
+
+  paperText.textContent = wishes[index];
+  paper.style.display = 'block';
+
+  document.getElementById('balloonHint').textContent =
+    'WISHES FOUND: ' + balloonsPopped.length + ' / 5';
+
+  // Setelah semua balon pecah, buka halaman surat
+  if (balloonsPopped.length === 5) {
+    document.getElementById('toLetter').hidden = false;
+    document.getElementById('balloonHint').textContent =
+      'ALL 5 WISHES UNLOCKED! ♡';
+  }
+}
+
+
+function closePaper() {
+  document.getElementById('paper').style.display = 'none';
+  openPaperIndex = null;
+}
+
+function restart() {
+  candlesBlown = 0;
+  balloonsPopped = [];
+  openPaperIndex = null;
+
+  document.querySelectorAll('.candle').forEach(c => c.classList.remove('out'));
+  document.querySelectorAll('.balloon').forEach(b => b.classList.remove('popped'));
+
+  document.getElementById('wishMessage').textContent =
+    'close your eyes & make a wish ♡';
+  document.getElementById('blowButton').hidden = false;
+  document.getElementById('toBalloons').hidden = true;
+  document.getElementById('toLetter').hidden = true;
+  document.getElementById('balloonHint').textContent = 'POPPED: 0 / 5';
+  document.getElementById('paper').style.display = 'none';
+
+  goTo(1);
+}
+</script>
+</body>
+</html>
